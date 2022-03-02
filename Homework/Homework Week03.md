@@ -1,0 +1,150 @@
+# Homework Week03  
+### Feb 28th  
+
+Chapter 2  
+P6. Obtain the HTTP/1.1 specification (RFC 2616). Answer the following
+questions:  
+a. Explain the mechanism used for signaling between the client and server
+to indicate that a persistent connection is being closed. Can the client, the server, or both signal the close of a connection?  
+b. What encryption services are provided by HTTP?  
+c. Can a client open three or more simultaneous connections with a given
+server?  
+d. Either a server or a client may close a transport connection between them
+if either one detects the connection has been idle for some time. Is it
+possible that one side starts closing a connection while the other side is
+transmitting data via this connection? Explain.  
+
+    Solution:
+    a. Typically, the HTTP server closes a connection when it isn’t used for a certain time (a configurable timeout interval). Persistent connections provide a mechanism by which a client and a server can signal the close of a TCP connection. This signaling takes place using the Connection header field. Once a close has been signaled, the client MUST NOT send any more requests on that connection.  
+    Both the client and the server can signal the close a connection.  
+    b. HTTP does not provide any encryption, but HTTPS does.  
+    c. Yes.  
+    d. Yes. A client, server, or proxy MAY close the transport connection at any time. For example, a client might have started to send a new request at the same time that the server has decided to close the “idle” connection. From the server’s point of view, the connection is being closed while it was idle, but from the client’s point of view, a request is in progress. (from RFC2616  8.1.4)
+
+P12. Write a simple TCP program for a server that accepts lines of input from a client and prints the lines onto the server’s standard output. (You can do this by modifying the TCPServer.py program in the text.) Compile and execute your program. On any other machine that contains a Web browser, set the proxy server in the browser to the host that is running your server program; also configure the port number appropriately. Your browser should now send its GET request messages to your server, and your server should display the messages on its standard output. Use this platform to determine whether your browser generates conditional GET messages for objects that are locally cached.
+
+Python:
+```
+from socket import *
+serverPort = 12000
+serverSocket = socket(AF_INET,SOCK_STREAM)
+serverSocket.bind(('',serverPort))
+serverSocket.listen(1)
+print("The server is ready to receive")
+while True:
+    connectionSocket, addr = serverSocket.accept()
+    sentence = connectionSocket.recv(1024).decode()
+    capitalizedSentence = sentence.upper()
+    connectionSocket.send(capitalizedSentence.encode())!
+    connectionSocket.close()
+```
+
+C++:
+```
+#include <string>
+#include <Winsock2.h>
+using namespace std;
+class TcpSocket
+{
+public:
+    TcpSocket();
+    {
+        m_dwVserion = 0;
+        m_isSocketFlag = true;
+        memset(&m_WsData, 0, sizeof(WSADATA));
+    }
+    ~TcpSocket()
+    {
+        closesocket(m_Scoket);
+        WSACleanup();
+    }
+ 
+    bool SocketInit()
+    {
+        m_dwVserion = MAKEWORD(1, 1);
+        m_iError = WSAStartup(m_dwVserion, &m_WsData);
+        if (m_iError != 0)
+        {
+            printf("socket 初始化操作失败");
+            m_isSocketFlag = false;
+        }
+        if (LOBYTE(m_WsData.wVersion) != 1 && HIBYTE(m_WsData.wVersion) != 1)
+        {
+            WSACleanup();
+            m_isSocketFlag = false;
+        }
+        return m_isSocketFlag;
+    }
+
+    bool CreatSocket(string strIp, int nPort)
+    {
+        if (!m_isSocketFlag)
+        return false;
+        m_Scoket = socket(AF_INET, SOCK_STREAM, 0);
+        SOCKADDR_IN addr;
+        addr.sin_addr.S_un.S_addr = inet_addr(strIp.c_str());
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(nPort);
+        m_iError = connect(m_Scoket, (SOCKADDR*)&addr, sizeof(SOCKADDR));
+        if(m_iError != 0)
+            m_isSocketFlag = false;
+        return m_isSocketFlag;
+    }
+
+    bool SendMsg(int msgType, string strSendBuf, string& strRecvMsg, int iTimeOut)
+    {
+        if (!m_isSocketFlag)
+        return false;
+        int timeOut = iTimeOut * 1000 ;        //秒
+        setsockopt(m_Scoket, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeOut, sizeof(timeOut));
+        setsockopt(m_Scoket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeOut, sizeof(timeOut));
+        printf("开始发送消息\n");
+        int iRet = send(m_Scoket, strSendBuf.c_str(), strSendBuf.length(), 0);
+        if (iRet == 0)
+        {
+            printf("发送消息超时\n");
+            return false;
+        }
+        printf("发送消息: %s\n", strSendBuf.c_str());
+        char recvBuf[1024] = { 0 };
+        iRet = recv(m_Scoket, recvBuf, sizeof(recvBuf), 0);
+        if (iRet == -1)
+        {
+            printf("接受消息超时\n");
+            return false;
+        }
+        string recvMsg = string(recvBuf);
+        if (recvMsg.find(to_string(MsgType)) == string::npos)
+            return false;
+        strRecvMsg = string(recvBuf);
+        return true;
+    }
+ 
+private:
+    SOCKET m_Scoket;
+    DWORD m_dwVserion;
+    WSADATA m_WsData;
+    int m_iError;
+    bool m_isSocketFlag;
+};
+
+int main()
+{
+    TcpSocket client;
+    bool isRet = client.SocketInit();
+    if (!isRet)
+        return 0;
+    isRet = client.CreatSocket("10.132.89.89", 2345);
+    if (isRet)
+    {
+        while(1)
+        {
+            string strRecv = string();
+            client.SendMsg(1, string("Hello"), strRecv, 5);
+            printf("接受消息: %s\n", strRecv.c_str());
+            Sleep(200);
+        }
+    }
+    getchar();
+    return 0;
+}
