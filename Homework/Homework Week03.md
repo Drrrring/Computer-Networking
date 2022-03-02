@@ -1,6 +1,39 @@
 # Homework Week03  
 ### Feb 28th  
 
+telnet mail.hust.edu.cn 25  
+```
+root@AuthorizedFrugal-VM:~# telnet mail.hust.edu.cn 25
+Trying 202.114.0.240...
+Connected to mail.hust.edu.cn.
+Escape character is '^]'.
+220 mx1.hust.edu.cn ESMTP Smtpd; Wed, 2 Mar 2022 19:25:15 +0800
+Hello
+500 5.5.1 Command unrecognized: "Hello"
+HELO
+250 mx1.hust.edu.cn Hello 23-94-24-124-host.colocrossing.com [23.94.24.124], pleased to meet you
+QUIT
+221 2.0.0 mx1.hust.edu.cn closing connection
+Connection closed by foreign host.
+```
+
+telnet cs.hust.edu.cn 80
+```
+root@AuthorizedFrugal-VM:~# telnet cs.hust.edu.cn 80
+Trying 210.42.108.5...
+Connected to zhanqun5.hust.edu.cn.
+Escape character is '^]'.
+^]                                                      
+telnet> status
+Connected to zhanqun5.hust.edu.cn.
+Operating in obsolete linemode
+Local character echo
+Escape character is '^]'.
+^]
+telnet> quit
+Connection closed.
+```
+
 Chapter 2  
 P6. Obtain the HTTP/1.1 specification (RFC 2616). Answer the following
 questions:  
