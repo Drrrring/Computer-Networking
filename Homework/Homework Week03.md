@@ -47,7 +47,7 @@ using namespace std;
 class TcpSocket
 {
 public:
-    TcpSocket();
+    TcpSocket()
     {
         m_dwVserion = 0;
         m_isSocketFlag = true;
